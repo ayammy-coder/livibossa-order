@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   const accessToken = process.env.SQUARE_TOKEN;
 
   if (!accessToken) {
-    return res.status(500).json({ error: 'Square token not configured' });
+    return res.status(500).json({ error: 'SQUARE_TOKEN not configured' });
   }
 
   try {
@@ -10,24 +10,24 @@ export default async function handler(req, res) {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Square-Version': '2024-01-18',
-        'Content-Type': 'application/json'
+        'Square-Version': '2024-01-18'
       }
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
+      console.error('Square API error:', data);
       return res.status(response.status).json({ 
-        error: 'Failed to fetch menu from Square',
-        details: await response.text()
+        error: 'Failed to fetch menu',
+        details: data 
       });
     }
 
-    const data = await response.json();
-    const items = data.objects?.filter(obj => obj.type === 'ITEM') || [];
-    
+    const items = (data.objects || []).filter(obj => obj.type === 'ITEM');
     res.status(200).json(items);
   } catch (error) {
-    console.error('Square API error:', error);
+    console.error('Menu API error:', error);
     res.status(500).json({ error: error.message });
   }
 }
